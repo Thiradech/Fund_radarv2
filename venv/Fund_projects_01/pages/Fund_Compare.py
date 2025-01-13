@@ -22,7 +22,7 @@ def load_data():
     primary_type = pd.read_csv(join_path('data/sec_code_primary.csv'))
     return fund_profiles, fund_nav, available_amc, primary_type
 
-st.write(join_path('data/all_active_funds_TH_overview.csv'))
+#st.write(join_path('data/all_active_funds_TH_overview.csv'))
 # Prepare NAV data
 def prepare_nav_data(fund_nav):
     fund_nav.rename(columns={fund_nav.columns[0]: "Date"}, inplace=True)
