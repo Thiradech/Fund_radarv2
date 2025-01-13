@@ -156,7 +156,7 @@ else:
     stats_summary = calculate_statistics(filtered_nav)
     stats_summary = stats_summary[stats_summary['Fund Name'].isin(selected_funds)].reset_index(drop=True)
     fund_profiles = fund_profiles.loc[:, ['Classification Sector Scheme', "Fund Type", "Fund Company", "Geographic Focus", "Total Net Assets", "Current Initial Charge", "Current Annual Charge"]]
-    stats_summary.merge(fund_profiles, left_on='Fund Name', right_on='TH_CODE', how='left')
+    stats_summary = stats_summary.merge(fund_profiles, left_on='Fund Name', right_on='TH_CODE', how='left')
 
     st.header("Weekly Descriptive Statistics (%Pct_Chg) and Sharpe Ratio")
     st.dataframe(stats_summary, width=2000)
