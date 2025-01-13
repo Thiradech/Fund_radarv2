@@ -1,9 +1,10 @@
 import streamlit as st
+import pandas as pd
 import csv
 from Fund_projects_01.util.auth import recheck_auth
 import os
-st.write("hello")
-st.write(st.session_state["authenticated"])
+
+st.set_page_config(page_title="Create Portfolio Tool", layout="wide")
 recheck_auth()
 
 def join_path(relative_path):
@@ -15,15 +16,13 @@ def save_portfolio(portfolio_name, initial_balance):
         writer = csv.writer(file)
         writer.writerow([portfolio_name, initial_balance])
 
-st.set_page_config(page_title="Create Portfolio Tool", layout="wide")
-st.title("Create Portfolio")
-
 # เนื้อหาของหน้า
 st.title("Create Portfolio")
 st.write("This page is restricted to admins.")
 
 portfolio_name = st.text_input("Portfolio Name:")
 initial_balance = st.number_input("Initial Balance:", min_value=0.0, step=0.01)
+portfolios = pd.DataFrame(columns=["Fund Name", "Buy amount", "Buy Date"])
 
 if st.button("Create Portfolio"):
     if portfolio_name:

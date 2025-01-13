@@ -19,10 +19,10 @@ def get_user_role(username):
 def recheck_auth():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.error("Unauthorized access. Redirecting to Fundwiz...")
-        st.experimental_set_query_params(page="Fundwiz")
+        st.query_params["page"] = "Fundwiz"
         st.stop()
 
     if st.session_state["role"] != "admin":
         st.error("Access denied. Redirecting to Fundwiz...")
-        st.experimental_set_query_params(page="Fundwiz")
+        st.query_params["page"] = "Fundwiz"
         st.stop()

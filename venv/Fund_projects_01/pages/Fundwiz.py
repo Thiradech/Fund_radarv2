@@ -18,7 +18,7 @@ if not st.session_state["authenticated"]:
             st.session_state["authenticated"] = True
             st.session_state["role"] = get_user_role(username)
             st.success("Login successful!")
-            st.experimental_set_query_params(page="Fundwiz")
+            st.query_params["page"] = "Fundwiz"
         else:
             st.error("Invalid username or password.")
     if for_Guest:
@@ -31,12 +31,14 @@ else:
     # แสดงลิงก์เฉพาะ Admin
     if st.session_state["role"] == "admin":
         st.markdown("### Admin Tools")
-        st.markdown("- [Create Portfolio](?page=tools_create_portfolios)")
-        st.markdown("- [Trade Fund](?page=tools_trade_fund)")
+        st.markdown("- [Create Portfolio](?page=create_portfolios)")
+        st.markdown("- [Trade Fund](?page=trade_fund)")
     else:
         st.info("You only have access to this page.")
     # ปุ่ม Logout
     if st.button("Logout"):
         st.session_state["authenticated"] = False
         st.session_state["role"] = "guest"
-        st.experimental_set_query_params(page="Fundwiz")
+        st.query_params["page"] = "Fundwiz"
+        
+    
