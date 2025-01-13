@@ -13,7 +13,7 @@ import os
 def join_path(relative_path):
     # สร้าง path แบบสมบูรณ์
     base_dir = os.path.dirname(__file__)  # โฟลเดอร์ที่โค้ดนี้อยู่
-    return os.path.join(base_dir, relative_path)
+    return os.path.join(base_dir+"/..", relative_path)
 
 def load_data():
     fund_profiles = pd.read_csv(join_path('data/all_active_funds_TH_overview.csv'))
