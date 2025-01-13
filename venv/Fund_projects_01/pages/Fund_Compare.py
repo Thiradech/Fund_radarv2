@@ -6,11 +6,18 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Fund Price Comparison", page_icon=":chart_with_upwards_trend:", layout="wide")
 # Load data files
+
+import os
+
+# สร้างเส้นทางไฟล์แบบสมบูรณ์
+def join_path(path):
+    return os.path.join(os.getcwd(), path)
+
 def load_data():
-    fund_profiles = pd.read_csv('data/all_active_funds_TH_overview.csv')
-    fund_nav = pd.read_csv('data/fund_NAV_history.csv')
-    available_amc = pd.read_csv('data/avaliable_amc.csv')
-    primary_type = pd.read_csv('data/sec_code_primary.csv')
+    fund_profiles = pd.read_csv(join_path('data/all_active_funds_TH_overview.csv'))
+    fund_nav = pd.read_csv(join_path('data/fund_NAV_history.csv'))
+    available_amc = pd.read_csv(join_path('data/avaliable_amc.csv'))
+    primary_type = pd.read_csv(join_path('data/sec_code_primary.csv'))
     return fund_profiles, fund_nav, available_amc, primary_type
 
 # Prepare NAV data
