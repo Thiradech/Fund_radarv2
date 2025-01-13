@@ -4,6 +4,7 @@ import plotly.express as px
 import numpy as np
 from datetime import datetime, timedelta
 
+st.set_page_config(page_title="Fund Price Comparison", page_icon=":chart_with_upwards_trend:", layout="wide")
 # Load data files
 def load_data():
     fund_profiles = pd.read_csv('data/all_active_funds_TH_overview.csv')
@@ -24,6 +25,7 @@ def create_sidebar(fund_profiles, available_amc, primary_type):
 
     classification_options = fund_profiles['Classification Sector Scheme'].dropna().unique()
     selected_classifications = st.sidebar.multiselect("Classification Sector Scheme:", classification_options)
+
 
     fund_type_options = fund_profiles['Fund Type'].dropna().unique()
     selected_fund_types = st.sidebar.multiselect("Fund Type:", fund_type_options)
@@ -72,27 +74,32 @@ def apply_filters(fund_profiles, available_amc, primary_type,
 def calculate_performance(filtered_nav, start_date, display_type, num_funds):
     if filtered_nav.empty:
         return pd.DataFrame(), []
+    
+    filtered_nav = filtered_nav.pivot(index='Date', columns='Fund Name', values='NAV')
+    def cumulative_pct_change(column):
+        # หา index แรกและสุดท้ายที่ไม่ใช่ NaN
+        first_valid = column.first_valid_index()
+        last_valid = column.last_valid_index()
+        
+        # Slice เฉพาะช่วงที่ไม่ใช่ NaN
+        valid_data = column.loc[first_valid:last_valid]
+        
+        # คำนวณ pct change สะสม
+        return valid_data.pct_change().cumsum() * 100
 
-    start_nav = filtered_nav[filtered_nav['Date'] == filtered_nav['Date'].min()]
-    start_nav = start_nav.set_index('Fund Name')['NAV']
+    cumulative_changes = filtered_nav.apply(cumulative_pct_change)
+    last_cumulative_changes = cumulative_changes.apply(lambda col: col[col.last_valid_index()] if col.last_valid_index() is not None else None).sort_values(ascending=(display_type == "Bottom Performers"))
+    selected_funds = last_cumulative_changes.index[:num_funds].tolist()
+    melted_cumulative_changes = cumulative_changes.reset_index().melt(id_vars='Date', var_name='Fund Name', value_name='Pct Change')
 
-    filtered_nav['Pct Change'] = filtered_nav.apply(
-        lambda row: ((row['NAV'] - start_nav[row['Fund Name']]) / start_nav[row['Fund Name']]) * 100, axis=1
-    )
-
-    latest_date = filtered_nav['Date'].max()
-    performance = filtered_nav[filtered_nav['Date'] == latest_date][['Fund Name', 'Pct Change']]
-    performance = performance.sort_values(by='Pct Change', ascending=(display_type == "Bottom Performers"))
-
-    selected_funds = performance.head(num_funds)['Fund Name'].tolist()
-    return filtered_nav[filtered_nav['Fund Name'].isin(selected_funds)], selected_funds
+    return melted_cumulative_changes[melted_cumulative_changes["Fund Name"].isin(selected_funds)], selected_funds
 
 # Calculate statistics
 def calculate_statistics(filtered_nav):
-    filtered_nav['Week'] = filtered_nav['Date'].dt.to_period('W').apply(lambda r: r.start_time)
-    weekly_nav = filtered_nav.groupby(['Fund Name', 'Week']).last().reset_index()
-    weekly_nav['Pct Change'] = weekly_nav.groupby('Fund Name')['NAV'].pct_change() * 100
-
+    filtered_nav = filtered_nav.pivot(index='Date', columns='Fund Name', values='Pct Change').reset_index()
+    filtered_nav = filtered_nav.resample('W-FRI', on='Date').last().reset_index().melt(id_vars='Date', var_name='Fund Name', value_name='Pct Change')
+    filtered_nav['Pct Change'] = filtered_nav['Pct Change'].diff()
+    weekly_nav = filtered_nav
     pct_stats = weekly_nav.groupby('Fund Name')['Pct Change'].agg(['mean', 'std', 'min', 'max']).reset_index()
     sharpe_ratios = weekly_nav.groupby('Fund Name').apply(
         lambda x: (x['Pct Change'].mean() / x['Pct Change'].std()) if x['Pct Change'].std() != 0 else np.nan
@@ -113,10 +120,9 @@ filtered_funds = apply_filters(fund_profiles, available_amc, primary_type,
 filtered_fund_names = filtered_funds['TH_CODE'].unique()
 start_date = datetime.now() - selected_period
 filtered_nav = fund_nav_long[(fund_nav_long['Fund Name'].isin(filtered_fund_names)) & (fund_nav_long['Date'] >= start_date)]
-
 filtered_nav, selected_funds = calculate_performance(filtered_nav, start_date, display_type, num_funds)
 
-st.title("Fund Price Comparison")
+#st.title("Fund Price Comparison")
 
 if filtered_nav.empty:
     st.write("No data available for the selected filters.")
@@ -129,8 +135,14 @@ else:
         title="Fund Performance Comparison",
         labels={"Pct Change": "% Change from Start", "Date": "Date"}
     )
-    st.plotly_chart(fig, use_container_width=True)
-
+    
+    fig.update_layout(
+    width=1200,  # ความกว้างของกราฟ
+    height=800,  # ความสูงของกราฟ
+    title_font_size=32  # ขนาดฟอนต์ของชื่อกราฟ
+    )
+    st.plotly_chart(fig, use_container_width=True, width=1000, height=800)
+    
     stats_summary = calculate_statistics(filtered_nav)
     stats_summary = stats_summary[stats_summary['Fund Name'].isin(selected_funds)].reset_index(drop=True)
 
