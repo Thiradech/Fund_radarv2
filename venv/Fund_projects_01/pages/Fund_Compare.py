@@ -10,8 +10,10 @@ st.set_page_config(page_title="Fund Price Comparison", page_icon=":chart_with_up
 import os
 
 # สร้างเส้นทางไฟล์แบบสมบูรณ์
-def join_path(path):
-    return os.path.join(os.getcwd(), path)
+def join_path(relative_path):
+    # สร้าง path แบบสมบูรณ์
+    base_dir = os.path.dirname(__file__)  # โฟลเดอร์ที่โค้ดนี้อยู่
+    return os.path.join(base_dir, relative_path)
 
 def load_data():
     fund_profiles = pd.read_csv(join_path('data/all_active_funds_TH_overview.csv'))
@@ -20,6 +22,7 @@ def load_data():
     primary_type = pd.read_csv(join_path('data/sec_code_primary.csv'))
     return fund_profiles, fund_nav, available_amc, primary_type
 
+st.write(join_path('data/all_active_funds_TH_overview.csv'))
 # Prepare NAV data
 def prepare_nav_data(fund_nav):
     fund_nav.rename(columns={fund_nav.columns[0]: "Date"}, inplace=True)
